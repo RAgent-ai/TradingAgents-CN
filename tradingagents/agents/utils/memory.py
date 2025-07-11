@@ -20,17 +20,29 @@ class FinancialSituationMemory:
             if dashscope_key:
                 dashscope.api_key = dashscope_key
         elif self.llm_provider == "google":
-            # Google AI使用阿里百炼嵌入（如果可用），否则使用OpenAI
-            dashscope_key = os.getenv('DASHSCOPE_API_KEY')
-            if dashscope_key:
-                self.embedding = "text-embedding-v3"
+            # Google AI使用Google的嵌入模型
+            from langchain_google_genai import GoogleGenerativeAIEmbeddings
+            google_api_key = os.getenv('GOOGLE_API_KEY')
+            if google_api_key:
+                self.google_embeddings = GoogleGenerativeAIEmbeddings(
+                    model="models/embedding-001",
+                    google_api_key=google_api_key
+                )
+                self.embedding = "google-embedding"
                 self.client = None
-                dashscope.api_key = dashscope_key
-                print("💡 Google AI使用阿里百炼嵌入服务")
+                print("✅ 使用Google AI嵌入服务")
             else:
-                self.embedding = "text-embedding-3-small"
-                self.client = OpenAI(base_url=config["backend_url"])
-                print("⚠️ Google AI回退到OpenAI嵌入服务")
+                # 如果没有Google API密钥，尝试使用DashScope
+                dashscope_key = os.getenv('DASHSCOPE_API_KEY')
+                if dashscope_key:
+                    self.embedding = "text-embedding-v3"
+                    self.client = None
+                    dashscope.api_key = dashscope_key
+                    print("💡 Google AI使用阿里百炼嵌入服务")
+                else:
+                    self.embedding = "text-embedding-3-small"
+                    self.client = OpenAI(base_url=config["backend_url"])
+                    print("⚠️ Google AI回退到OpenAI嵌入服务")
         elif config["backend_url"] == "http://localhost:11434/v1":
             self.embedding = "nomic-embed-text"
             self.client = OpenAI(base_url=config["backend_url"])
@@ -50,9 +62,16 @@ class FinancialSituationMemory:
     def get_embedding(self, text):
         """Get embedding for a text using the configured provider"""
 
-        if (self.llm_provider == "dashscope" or
+        if self.llm_provider == "google" and self.embedding == "google-embedding":
+            # 使用Google的嵌入模型
+            try:
+                embeddings = self.google_embeddings.embed_query(text)
+                return embeddings
+            except Exception as e:
+                raise Exception(f"Error getting Google embedding: {str(e)}")
+        elif (self.llm_provider == "dashscope" or
             self.llm_provider == "alibaba" or
-            (self.llm_provider == "google" and self.client is None)):
+            (self.llm_provider == "google" and self.embedding == "text-embedding-v3")):
             # 使用阿里百炼的嵌入模型
             try:
                 response = TextEmbedding.call(
