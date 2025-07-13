@@ -14,13 +14,16 @@ def check_api_keys():
     anthropic_key = os.getenv("ANTHROPIC_API_KEY")
     google_key = os.getenv("GOOGLE_API_KEY")
     
+    # 获取当前LLM提供商配置
+    llm_provider = os.getenv("LLM_PROVIDER", "google")
+    
     # 构建详细状态
     details = {
-        "DASHSCOPE_API_KEY": {
-            "configured": bool(dashscope_key),
-            "display": f"{dashscope_key[:12]}..." if dashscope_key else "未配置",
-            "required": True,
-            "description": "阿里百炼API密钥"
+        "GOOGLE_API_KEY": {
+            "configured": bool(google_key),
+            "display": f"{google_key[:12]}..." if google_key else "未配置",
+            "required": llm_provider == "google",  # 如果使用Google作为提供商则必需
+            "description": "Google AI API密钥 (Gemini)"
         },
         "FINNHUB_API_KEY": {
             "configured": bool(finnhub_key),
@@ -28,23 +31,23 @@ def check_api_keys():
             "required": True,
             "description": "金融数据API密钥"
         },
+        "DASHSCOPE_API_KEY": {
+            "configured": bool(dashscope_key),
+            "display": f"{dashscope_key[:12]}..." if dashscope_key else "未配置",
+            "required": llm_provider == "dashscope",  # 如果使用阿里百炼则必需
+            "description": "阿里百炼API密钥"
+        },
         "OPENAI_API_KEY": {
             "configured": bool(openai_key),
             "display": f"{openai_key[:12]}..." if openai_key else "未配置",
-            "required": False,
+            "required": llm_provider == "openai",  # 如果使用OpenAI则必需
             "description": "OpenAI API密钥"
         },
         "ANTHROPIC_API_KEY": {
             "configured": bool(anthropic_key),
             "display": f"{anthropic_key[:12]}..." if anthropic_key else "未配置",
-            "required": False,
+            "required": llm_provider == "anthropic",  # 如果使用Anthropic则必需
             "description": "Anthropic API密钥"
-        },
-        "GOOGLE_API_KEY": {
-            "configured": bool(google_key),
-            "display": f"{google_key[:12]}..." if google_key else "未配置",
-            "required": False,
-            "description": "Google AI API密钥"
         }
     }
     

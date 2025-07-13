@@ -14,61 +14,50 @@ def render_sidebar():
         # API密钥状态
         st.subheader("🔑 API密钥状态")
         
-        dashscope_key = os.getenv("DASHSCOPE_API_KEY")
+        # 检查各个API密钥
+        google_key = os.getenv("GOOGLE_API_KEY")
         finnhub_key = os.getenv("FINNHUB_API_KEY")
+        dashscope_key = os.getenv("DASHSCOPE_API_KEY")
+        openai_key = os.getenv("OPENAI_API_KEY")
         
-        if dashscope_key:
-            st.success(f"✅ 阿里百炼: {dashscope_key[:12]}...")
+        # Google AI (主要)
+        if google_key:
+            st.success(f"✅ Google AI: {google_key[:12]}...")
         else:
-            st.error("❌ 阿里百炼: 未配置")
+            st.error("❌ Google AI: 未配置")
         
+        # 金融数据
         if finnhub_key:
             st.success(f"✅ 金融数据: {finnhub_key[:12]}...")
         else:
             st.error("❌ 金融数据: 未配置")
         
+        # 其他可选API
+        if dashscope_key:
+            st.info(f"ℹ️ 阿里百炼: {dashscope_key[:12]}... (备用)")
+        
+        if openai_key:
+            st.info(f"ℹ️ OpenAI: {openai_key[:12]}... (备用)")
+        
         st.markdown("---")
         
-        # AI模型配置
+        # AI模型信息 (只显示，不允许选择)
         st.subheader("🧠 AI模型配置")
-
-        # LLM提供商选择
-        llm_provider = st.selectbox(
-            "选择LLM提供商",
-            options=["dashscope", "google"],
-            index=0,
-            format_func=lambda x: {
-                "dashscope": "阿里百炼 - 国产模型",
-                "google": "Google AI - Gemini模型"
-            }[x],
-            help="选择AI模型提供商"
-        )
-
-        # 根据提供商显示不同的模型选项
-        if llm_provider == "dashscope":
-            llm_model = st.selectbox(
-                "选择阿里百炼模型",
-                options=["qwen-turbo", "qwen-plus-latest", "qwen-max"],
-                index=1,
-                format_func=lambda x: {
-                    "qwen-turbo": "通义千问 Turbo - 快速响应",
-                    "qwen-plus-latest": "通义千问 Plus - 平衡性能",
-                    "qwen-max": "通义千问 Max - 最强性能"
-                }[x],
-                help="选择用于分析的阿里百炼模型"
-            )
-        else:  # google
-            llm_model = st.selectbox(
-                "选择Google模型",
-                options=["gemini-2.0-flash", "gemini-1.5-pro", "gemini-1.5-flash"],
-                index=0,
-                format_func=lambda x: {
-                    "gemini-2.0-flash": "Gemini 2.0 Flash - 推荐使用",
-                    "gemini-1.5-pro": "Gemini 1.5 Pro - 强大性能",
-                    "gemini-1.5-flash": "Gemini 1.5 Flash - 快速响应"
-                }[x],
-                help="选择用于分析的Google Gemini模型"
-            )
+        
+        # 从环境变量读取配置
+        llm_provider = os.getenv("LLM_PROVIDER", "google")
+        deep_think_model = os.getenv("DEEP_THINK_MODEL", "gemini-2.0-flash")
+        quick_think_model = os.getenv("QUICK_THINK_MODEL", "gemini-1.5-flash")
+        
+        # 显示当前配置
+        st.info(f"""
+        **当前配置:**
+        - 提供商: {llm_provider.upper()}
+        - 深度分析模型: {deep_think_model}
+        - 快速分析模型: {quick_think_model}
+        
+        💡 模型配置通过环境变量设置，请在 .env 文件中修改
+        """)
         
         # 高级设置
         with st.expander("⚙️ 高级设置"):
@@ -98,10 +87,10 @@ def render_sidebar():
         # 系统信息
         st.subheader("ℹ️ 系统信息")
         
-        st.info("""
+        st.info(f"""
         **版本**: 1.0.0
         **框架**: Streamlit + LangGraph
-        **AI模型**: 阿里百炼通义千问
+        **AI模型**: {llm_provider.upper()} ({deep_think_model})
         **数据源**: FinnHub API
         """)
         
@@ -115,9 +104,10 @@ def render_sidebar():
         - [🔧 API密钥配置](../docs/security/api_keys_security.md)
         """)
     
+    # 返回配置（从环境变量读取）
     return {
         'llm_provider': llm_provider,
-        'llm_model': llm_model,
+        'llm_model': deep_think_model,  # 使用深度分析模型作为主模型
         'enable_memory': enable_memory,
         'enable_debug': enable_debug,
         'max_tokens': max_tokens

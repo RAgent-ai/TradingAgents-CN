@@ -8,11 +8,11 @@ DEFAULT_CONFIG = {
         os.path.abspath(os.path.join(os.path.dirname(__file__), ".")),
         "dataflows/data_cache",
     ),
-    # LLM settings
-    "llm_provider": "openai",
-    "deep_think_llm": "o4-mini",
-    "quick_think_llm": "gpt-4o-mini",
-    "backend_url": "https://api.openai.com/v1",
+    # LLM settings - 从环境变量读取，默认使用 Google Gemini
+    "llm_provider": os.getenv("LLM_PROVIDER", "google"),
+    "deep_think_llm": os.getenv("DEEP_THINK_MODEL", "gemini-2.0-flash"),
+    "quick_think_llm": os.getenv("QUICK_THINK_MODEL", "gemini-1.5-flash"),
+    "backend_url": os.getenv("LLM_BACKEND_URL", "https://api.openai.com/v1"),
     # Debate and discussion settings
     "max_debate_rounds": 1,
     "max_risk_discuss_rounds": 1,
