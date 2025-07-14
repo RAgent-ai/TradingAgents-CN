@@ -318,40 +318,12 @@ class OptimizedChinaDataProvider:
         return None
     
     def _generate_fallback_data(self, symbol: str, start_date: str, end_date: str, error_msg: str) -> str:
-        """生成备用数据"""
-        return f"""# {symbol} A股数据获取失败
-
-## ❌ 错误信息
-{error_msg}
-
-## 📊 模拟数据（仅供演示）
-- 股票代码: {symbol}
-- 股票名称: 模拟公司
-- 数据期间: {start_date} 至 {end_date}
-- 模拟价格: ¥{random.uniform(10, 50):.2f}
-- 模拟涨跌: {random.uniform(-5, 5):+.2f}%
-
-## ⚠️ 重要提示
-由于通达信API限制或网络问题，无法获取实时数据。
-建议稍后重试或检查网络连接。
-
-生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-"""
+        """生成错误信息，不返回假数据"""
+        raise Exception(f"A股数据获取失败 - {symbol}: {error_msg}")
     
     def _generate_fallback_fundamentals(self, symbol: str, error_msg: str) -> str:
-        """生成备用基本面数据"""
-        return f"""# {symbol} A股基本面分析失败
-
-## ❌ 错误信息
-{error_msg}
-
-## 📊 基本信息
-- 股票代码: {symbol}
-- 分析状态: 数据获取失败
-- 建议: 稍后重试或检查网络连接
-
-生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-"""
+        """生成错误信息，不返回假数据"""
+        raise Exception(f"A股基本面分析失败 - {symbol}: {error_msg}")
 
 
 # 全局实例

@@ -172,7 +172,8 @@ def create_market_analyst_react(llm, toolkit):
 
             except Exception as e:
                 print(f"❌ [DEBUG] ReAct Agent失败: {str(e)}")
-                report = f"ReAct Agent市场分析失败: {str(e)}"
+                # 抛出错误而不是生成假报告
+                raise Exception(f"ReAct Agent市场分析失败: {str(e)}")
         else:
             # 离线模式，使用原有逻辑
             report = "离线模式，暂不支持"

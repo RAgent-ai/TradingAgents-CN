@@ -552,7 +552,8 @@ class Toolkit:
             return openai_fundamentals_results
         except Exception as e:
             print(f"❌ [DEBUG] OpenAI基本面分析失败: {str(e)}")
-            return f"基本面分析失败: {str(e)}"
+            # 抛出错误而不是返回假报告
+            raise Exception(f"基本面分析失败: {str(e)}")
 
     @staticmethod
     @tool
@@ -625,4 +626,5 @@ class Toolkit:
             print(f"❌ [DEBUG] get_china_fundamentals 失败:")
             print(f"❌ [DEBUG] 错误: {str(e)}")
             print(f"❌ [DEBUG] 堆栈: {error_details}")
-            return f"中国股票基本面分析失败: {str(e)}"
+            # 抛出错误而不是返回假报告
+            raise Exception(f"中国股票基本面分析失败: {str(e)}")

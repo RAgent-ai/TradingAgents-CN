@@ -220,7 +220,8 @@ def create_fundamentals_analyst_react(llm, toolkit):
                 print(f"📊 [DEBUG] 错误类型: {type(e).__name__}")
                 if hasattr(e, 'args') and e.args:
                     print(f"📊 [DEBUG] 错误详情: {e.args}")
-                report = f"ReAct Agent基本面分析失败: {str(e)}"
+                # 抛出错误而不是生成假报告
+                raise Exception(f"ReAct Agent基本面分析失败: {str(e)}")
         else:
             # 离线模式，使用原有逻辑
             report = "离线模式，暂不支持"
@@ -427,7 +428,8 @@ def create_fundamentals_analyst(llm, toolkit):
 
                 except Exception as e:
                     print(f"❌ [DEBUG] 手动工具调用失败: {str(e)}")
-                    report = f"基本面分析失败：{str(e)}"
+                    # 抛出错误而不是生成假报告
+                    raise Exception(f"基本面分析失败：{str(e)}")
             else:
                 # 非中国股票，直接使用LLM的回复
                 report = result.content

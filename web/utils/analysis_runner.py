@@ -263,8 +263,38 @@ def run_stock_analysis(stock_symbol, analysis_date, analysts, research_depth, ll
         import traceback
         print(f"完整错误堆栈: {traceback.format_exc()}")
 
-        # 如果真实分析失败，返回模拟数据用于演示
-        return generate_demo_results(stock_symbol, analysis_date, analysts, research_depth, llm_provider, llm_model, str(e))
+        # 解析错误类型，返回用户友好的错误信息
+        error_message = str(e)
+        
+        # 根据错误类型返回更具体的错误信息
+        if "API" in error_message or "api" in error_message:
+            user_friendly_error = f"API调用失败: {error_message}"
+        elif "LLM" in error_message or "model" in error_message:
+            user_friendly_error = f"大语言模型调用失败: {error_message}"
+        elif "network" in error_message or "timeout" in error_message:
+            user_friendly_error = f"网络连接错误: {error_message}"
+        elif "database" in error_message or "MongoDB" in error_message or "Redis" in error_message:
+            user_friendly_error = f"数据存储错误: {error_message}"
+        elif "rate limit" in error_message.lower():
+            user_friendly_error = "API调用频率超限，请稍后重试"
+        elif "quota" in error_message.lower():
+            user_friendly_error = "API配额已用尽，请检查账户余额"
+        else:
+            user_friendly_error = f"分析过程出错: {error_message}"
+
+        # 直接返回错误结果，不生成假报告
+        return {
+            'success': False,
+            'error': user_friendly_error,
+            'error_details': {
+                'error_type': type(e).__name__,
+                'error_message': str(e),
+                'traceback': traceback.format_exc()
+            },
+            'state': {},
+            'decision': None,
+            'session_id': session_id if TOKEN_TRACKING_ENABLED else None
+        }
 
 def format_analysis_results(results):
     """格式化分析结果用于显示"""

@@ -54,3 +54,4 @@ docs/contribution/
 # AI工具目录 (不纳入版本控制)
 .trae/
 .augment/
+data_cache
