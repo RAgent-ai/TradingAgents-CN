@@ -223,8 +223,11 @@ def main():
             st.info("请确保已安装所有依赖包")
         return
     elif page == "📈 历史记录":
-        st.header("📈 历史记录")
-        st.info("历史记录功能开发中...")
+        try:
+            from pages.history import render_history_page
+            render_history_page()
+        except ImportError as e:
+            st.error(f"历史记录页面加载失败: {e}")
         return
     elif page == "🔧 系统状态":
         st.header("🔧 系统状态")
@@ -276,114 +279,75 @@ def main():
     # 渲染侧边栏
     config = render_sidebar()
     
-    # 主内容区域
-    col1, col2 = st.columns([2, 1])
+    # 主内容区域 - 简化为单列布局
+    st.header("📊 股票分析")
     
-    with col1:
-        st.header("📊 股票分析")
-        
-        # 渲染分析表单
-        form_data = render_analysis_form()
+    # 渲染分析表单
+    form_data = render_analysis_form()
 
-        # 检查是否提交了表单
-        if form_data.get('submitted', False):
-            if not form_data['stock_symbol']:
-                st.error("请输入股票代码")
-            elif not form_data['analysts']:
-                st.error("请至少选择一个分析师")
-            else:
-                # 执行分析
-                st.session_state.analysis_running = True
+    # 检查是否提交了表单
+    if form_data.get('submitted', False):
+        if not form_data['stock_symbol']:
+            st.error("请输入股票代码")
+        elif not form_data['analysts']:
+            st.error("请至少选择一个分析师")
+        else:
+            # 执行分析
+            st.session_state.analysis_running = True
 
-                # 创建进度显示
-                progress_container = st.container()
-                progress_display = StreamlitProgressDisplay(progress_container)
-                progress_callback = create_progress_callback(progress_display)
+            # 创建进度显示
+            progress_container = st.container()
+            progress_display = StreamlitProgressDisplay(progress_container)
+            progress_callback = create_progress_callback(progress_display)
 
-                try:
-                    results = run_stock_analysis(
-                        stock_symbol=form_data['stock_symbol'],
-                        analysis_date=form_data['analysis_date'],
-                        analysts=form_data['analysts'],
-                        research_depth=form_data['research_depth'],
-                        llm_provider=config['llm_provider'],
-                        market_type=form_data.get('market_type', '美股'),
-                        llm_model=config['llm_model'],
-                        progress_callback=progress_callback
-                    )
+            try:
+                results = run_stock_analysis(
+                    stock_symbol=form_data['stock_symbol'],
+                    analysis_date=form_data['analysis_date'],
+                    analysts=form_data['analysts'],
+                    research_depth=form_data['research_depth'],
+                    llm_provider=config['llm_provider'],
+                    market_type=form_data.get('market_type', '美股'),
+                    llm_model=config['llm_model'],
+                    progress_callback=progress_callback
+                )
 
-                    # 清除进度显示
-                    progress_display.clear()
+                # 清除进度显示
+                progress_display.clear()
 
-                    # 格式化结果
-                    formatted_results = format_analysis_results(results)
+                # 格式化结果
+                formatted_results = format_analysis_results(results)
 
-                    st.session_state.analysis_results = formatted_results
-                    st.session_state.last_analysis_time = datetime.datetime.now()
-                    st.success("✅ 分析完成！")
+                # 保存分析结果到文件
+                from utils.report_storage import save_analysis_report
+                save_analysis_report(
+                    stock_symbol=form_data['stock_symbol'],
+                    analysis_date=form_data['analysis_date'],
+                    results=formatted_results
+                )
 
-                except Exception as e:
-                    # 清除进度显示
-                    progress_display.clear()
+                st.session_state.analysis_results = formatted_results
+                st.session_state.last_analysis_time = datetime.datetime.now()
+                st.success("✅ 分析完成！报告已保存到历史记录。")
 
-                    st.error(f"❌ 分析失败: {str(e)}")
-                    st.markdown("""
-                    **可能的解决方案:**
-                    1. 检查API密钥是否正确配置
-                    2. 确认网络连接正常
-                    3. 验证股票代码是否有效
-                    4. 尝试减少研究深度或更换模型
-                    """)
-                finally:
-                    st.session_state.analysis_running = False
-        
-        # 显示分析结果
-        if st.session_state.analysis_results:
-            render_results(st.session_state.analysis_results)
+            except Exception as e:
+                # 清除进度显示
+                progress_display.clear()
+
+                st.error(f"❌ 分析失败: {str(e)}")
+                st.markdown("""
+                **可能的解决方案:**
+                1. 检查API密钥是否正确配置
+                2. 确认网络连接正常
+                3. 验证股票代码是否有效
+                4. 尝试减少研究深度或更换模型
+                """)
+            finally:
+                st.session_state.analysis_running = False
     
-    with col2:
-        st.header("ℹ️ 使用指南")
-        
-        # 快速开始指南
-        with st.expander("🎯 快速开始", expanded=True):
-            st.markdown("""
-            1. **输入股票代码** (如 AAPL, TSLA, MSFT)
-            2. **选择分析日期** (默认今天)
-            3. **选择分析师团队** (至少一个)
-            4. **设置研究深度** (1-5级)
-            5. **点击开始分析**
-            """)
-        
-        # 分析师说明
-        with st.expander("👥 分析师团队说明"):
-            st.markdown("""
-            - **📈 市场分析师**: 技术面分析，价格趋势
-            - **💭 社交媒体分析师**: 投资者情绪分析
-            - **📰 新闻分析师**: 新闻事件影响分析
-            - **💰 基本面分析师**: 财务数据分析
-            """)
-        
-        # 模型选择说明
-        with st.expander("🧠 AI模型说明"):
-            st.markdown("""
-            - **Turbo**: 快速响应，适合快速查询
-            - **Plus**: 平衡性能，推荐日常使用  
-            - **Max**: 最强性能，适合深度分析
-            """)
-        
-        # 风险提示
-        st.warning("""
-        ⚠️ **投资风险提示**
-        
-        - 分析结果仅供参考，不构成投资建议
-        - 投资有风险，入市需谨慎
-        - 请结合多方信息进行决策
-        - 重大投资建议咨询专业顾问
-        """)
-        
-        # 显示系统状态
-        if st.session_state.last_analysis_time:
-            st.info(f"🕒 上次分析时间: {st.session_state.last_analysis_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    # 显示分析结果
+    if st.session_state.analysis_results:
+        render_results(st.session_state.analysis_results)
 
 if __name__ == "__main__":
     main()

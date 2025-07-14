@@ -2,6 +2,7 @@
 # 服务器配置
 port = 8501
 address = "localhost"
+headless = true
 
 [browser]
 # 浏览器配置

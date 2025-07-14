@@ -98,15 +98,35 @@ def run_stock_analysis(stock_symbol, analysis_date, analysts, research_depth, ll
 
     # 验证环境变量
     update_progress("检查环境变量配置...")
-    dashscope_key = os.getenv("DASHSCOPE_API_KEY")
     finnhub_key = os.getenv("FINNHUB_API_KEY")
-
-    print(f"环境变量检查:")
-    print(f"  DASHSCOPE_API_KEY: {'已设置' if dashscope_key else '未设置'}")
-    print(f"  FINNHUB_API_KEY: {'已设置' if finnhub_key else '未设置'}")
-
-    if not dashscope_key:
-        raise ValueError("DASHSCOPE_API_KEY 环境变量未设置")
+    
+    # 根据 LLM 提供商检查相应的 API 密钥
+    llm_provider = llm_provider.lower()
+    if llm_provider == "google":
+        google_key = os.getenv("GOOGLE_API_KEY")
+        print(f"环境变量检查:")
+        print(f"  GOOGLE_API_KEY: {'已设置' if google_key else '未设置'}")
+        print(f"  FINNHUB_API_KEY: {'已设置' if finnhub_key else '未设置'}")
+        if not google_key:
+            raise ValueError("GOOGLE_API_KEY 环境变量未设置")
+    elif llm_provider in ["dashscope", "alibaba"]:
+        dashscope_key = os.getenv("DASHSCOPE_API_KEY")
+        print(f"环境变量检查:")
+        print(f"  DASHSCOPE_API_KEY: {'已设置' if dashscope_key else '未设置'}")
+        print(f"  FINNHUB_API_KEY: {'已设置' if finnhub_key else '未设置'}")
+        if not dashscope_key:
+            raise ValueError("DASHSCOPE_API_KEY 环境变量未设置")
+    elif llm_provider == "openai":
+        openai_key = os.getenv("OPENAI_API_KEY")
+        print(f"环境变量检查:")
+        print(f"  OPENAI_API_KEY: {'已设置' if openai_key else '未设置'}")
+        print(f"  FINNHUB_API_KEY: {'已设置' if finnhub_key else '未设置'}")
+        if not openai_key:
+            raise ValueError("OPENAI_API_KEY 环境变量未设置")
+    else:
+        print(f"环境变量检查:")
+        print(f"  FINNHUB_API_KEY: {'已设置' if finnhub_key else '未设置'}")
+    
     if not finnhub_key:
         raise ValueError("FINNHUB_API_KEY 环境变量未设置")
 
